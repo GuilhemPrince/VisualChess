@@ -1,7 +1,10 @@
 import os
 import matplotlib.pyplot as plt
+import numpy as np
 import cv2
 print(os.getcwd())
+
+############        General            ############
 
 def get_list_img_path(folder_path):
     elements = sorted(os.listdir(folder_path))
@@ -87,6 +90,34 @@ def get_test_boxes():
          'h7': [(540, 562), (612, 566), (545, 649), (617, 648)], 
          'h8': [(612, 566), (693, 556), (617, 648), (700, 647)]}
     return boxes
+
+############         Piece detection          ############
+
+def get_gradient(img, croop = 8):
+    X, Y = img.shape
+    img =  img[int(X/croop):int((croop-1)*X/croop), int(Y/croop):int((croop-1)*Y/croop)]
+    gx = cv2.Sobel(img, cv2.CV_64F, 1, 0, ksize=1)
+    gy = cv2.Sobel(img, cv2.CV_64F, 0, 1, ksize=1)
+
+    mag = np.sqrt(gx**2 + gy**2)
+    mean_gradient = np.mean(mag)
+
+    print("Le gradient moyen de l'image est : ", round(mean_gradient, 1))
+    return mean_gradient
+
+def is_piece_in_square(img, treshold=10):
+    return get_gradient(img) > treshold
+
+############         Color detection          ############
+
+def get_central_part_of_square(img):
+    X, Y = img.shape
+    return img[int(X/4):int(3*X/4), int(Y/4):int(3*Y/4)]
+
+def is_piece_white(img, treshold = 100 ):
+    central_img = get_central_part_of_square(img)
+    whiteness = np.mean(central_img)
+    return whiteness > treshold
 
 if __name__ == '__main__':
     show_and_get_colored_img('.././photos_test/square/with_pieces/black_on_white_g.png')
