@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 from matplotlib import pyplot as plt
+import os
 
 
 def import_image(path):
@@ -383,7 +384,7 @@ def box_detection(img_path, binary_threshold, use_median, hough_lines_threshold)
 
 if __name__ == "__main__":
 
-    img_path = "photos_test/chess.com/4.png"
+    img_path = "photos_test/chess.com_game/120.jpg"
 
     binary_threshold = 200
     use_median = False
@@ -410,3 +411,21 @@ if __name__ == "__main__":
     plt.subplot(1, 1, 1), plt.imshow(img)
     plt.title("Highlighted Boxes"), plt.xticks([]), plt.yticks([])
     plt.show()
+
+    images_folder_path = "./photos_test/chess.com_game/"
+    path_image_list = sorted(
+        os.listdir(images_folder_path), key=lambda x: int(x.split(".")[0])
+    )
+    move_nb = len(path_image_list)
+
+    list_boxes = []
+
+    for i in range(len(path_image_list)):
+        print(i)
+        img_path = images_folder_path + path_image_list[i]
+        boxes = box_detection(
+            img_path, binary_threshold, use_median, hough_lines_threshold
+        )[-1]
+        list_boxes.append(boxes)
+        if len(boxes) != 64:
+            print("erreur :", i)
