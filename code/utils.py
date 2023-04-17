@@ -91,9 +91,9 @@ def get_test_boxes():
          'h8': [(612, 566), (693, 556), (617, 648), (700, 647)]}
     return boxes
 
-############         Piece detection          ############
+############         Piece detection gray         ############
 
-def get_gradient(img, croop = 8):
+def get_gradient(img, croop = 5):
     X, Y = img.shape
     img =  img[int(X/croop):int((croop-1)*X/croop), int(Y/croop):int((croop-1)*Y/croop)]
     gx = cv2.Sobel(img, cv2.CV_64F, 1, 0, ksize=1)
@@ -102,11 +102,25 @@ def get_gradient(img, croop = 8):
     mag = np.sqrt(gx**2 + gy**2)
     mean_gradient = np.mean(mag)
 
-    print("Le gradient moyen de l'image est : ", round(mean_gradient, 1))
+    #print("Le gradient moyen de l'image est : ", round(mean_gradient, 1))
     return mean_gradient
 
-def is_piece_in_square(img, treshold=10):
+def is_piece_in_square(img, treshold=7.5):
     return get_gradient(img) > treshold
+
+############         Piece detection color         ############
+
+def get_gradient_color(img):
+    r_grad = get_gradient(img[:,:,0])
+    g_grad = get_gradient(img[:,:,1])
+    b_grad = get_gradient(img[:,:,2]) 
+    mean_grad =    (r_grad + g_grad + b_grad) /3
+    print("Le gradient moyen de l'image est : ", round(mean_grad, 1))
+    return mean_grad
+
+def is_piece_in_color_square(img, treshold=8):
+    return get_gradient_color(img) > treshold
+
 
 ############         Color detection          ############
 
@@ -119,5 +133,116 @@ def is_piece_white(img, treshold = 100 ):
     whiteness = np.mean(central_img)
     return whiteness > treshold
 
-if __name__ == '__main__':
-    show_and_get_colored_img('.././photos_test/square/with_pieces/black_on_white_g.png')
+############         Square detection          ############
+
+
+def get_coord_square(point_list):
+    Xmin = int((point_list[0][0] + point_list[2][0]) / 2)
+    Xmax = int((point_list[1][0] + point_list[3][0]) / 2)
+    Ymin = int((point_list[0][1] + point_list[1][1]) / 2)
+    Ymax = int((point_list[2][1] + point_list[3][1]) / 2)
+    return Xmin, Xmax, Ymin, Ymax
+
+def get_square(img, Xmin, Xmax, Ymin, Ymax):
+    return img[Ymin:Ymax, Xmin:Xmax] # X et Y sont inversés, je ne sais pas pq
+
+
+def get_all_squares(boxes, board):
+    square_list = []
+    for square in boxes:
+        Xmin, Xmax, Ymin, Ymax = get_coord_square(boxes[square])
+        square_list.append(get_square(board, Xmin, Xmax, Ymin, Ymax))
+    return square_list
+
+def square_color(square):
+    '''
+        return 0 if the square is empty
+        return 1 if there is a white piece in the square
+        return 2 if the piece is black
+    '''
+    if is_piece_in_square(square):
+        return 2 - is_piece_white(square) 
+    return 0
+
+def squares_to_array(square_list):
+    board = np.zeros([8,8])
+    for i in range(8):
+        for j in range(8):
+            board[i,j] = square_color(square_list[j * 8 + (7-i)])
+    return board
+
+############         Array Modeliastion          ############
+
+def get_initial_position():
+    initial_position = np.array([['R','N','B','K','Q','B','N','R'], 
+                             ['P']*8, 
+                             [' ']*8, 
+                             [' ']*8, 
+                             [' ']*8, 
+                             [' ']*8, 
+                             ['p']*8, 
+                             ['r','n','b','k','q','b','n','r']])
+    return initial_position
+
+def get_square_type(pos_square):
+    if pos_square == ' ':
+        return 0
+    if pos_square.lower() == pos_square: # les blancs sont en lower_case
+        return 1
+    return 2
+
+def is_final_square(move_square, pos_square):
+    if move_square == 0:
+        return False
+    if get_square_type(pos_square) == move_square:
+        return False
+    return True
+
+def is_capture(final_pos_square):
+    return final_pos_square != ' '
+
+def get_queen(final_pos_square):
+    if final_pos_square.lower() == final_pos_square: 
+        return 'q'
+    return 'Q'
+
+def print_move(pos_square, coord, capture, queening):
+    piece = ''
+    capt = ''
+    queen = ''
+    if pos_square.lower() != 'p':
+        piece = pos_square.upper()
+    if capture :
+        capt = 'x'
+    if queening :
+        queen = '-Q'
+    column = chr(coord[0] + 97)
+    line = coord[1] + 1
+    print(piece + capt + str(column) + str(line) + queen)
+
+def new_position(current_position, new_move):
+    original_square = [9,9]
+    final_square = [9,9]
+    capture = False
+    for c in range(8):
+        for l in range(8):
+            move_square = new_move[c,l]
+            pos_square = current_position[c,l]
+            if move_square == 0 and pos_square != ' ' :
+                original_square = (c,l)
+            if is_final_square(move_square, pos_square):
+                final_square = (c,l)
+                capture = is_capture(pos_square)
+    current_position[final_square] = current_position[original_square]
+    current_position[original_square] = ' '
+    # Is a player queening ?
+    queening = current_position[final_square].lower() == 'p' and (final_square[0] == 0 or final_square[0] == 7)
+
+    # Print the Move
+    print_move(current_position[final_square], final_square, capture, queening)
+
+    # If the player is queening, replace the pawn by the queen
+    if queening :
+        current_position[final_square] = get_queen(current_position[final_square])
+
+    return current_position
