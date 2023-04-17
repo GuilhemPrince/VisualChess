@@ -141,7 +141,7 @@ def get_points(linesP, median_length_lines, img_shape, use_median=True):
                         points.append((point1, point2))
 
             else:
-                point1, point2 = get_points_full_line(l, img.shape[1], img.shape[0])
+                point1, point2 = get_points_full_line(l, img_shape[1], img_shape[0])
                 if not check_line_already_existing(point1, point2, points, 30):
                     points.append((point1, point2))
 
@@ -356,16 +356,16 @@ def get_chessboard_boxes(cols_sorted):
     return boxes
 
 
-def box_detection(img_path):
+def box_detection(img_path, binary_threshold, use_median, hough_lines_threshold):
     img, img_gray = import_image(img_path)
     gaussian_blur = apply_gaussian_blur(img_gray)
 
-    binary_img = apply_binary_threshold(gaussian_blur)
+    binary_img = apply_binary_threshold(gaussian_blur, binary_threshold)
     edges = get_edges(binary_img)
-    linesP = get_houghlines(edges)
+    linesP = get_houghlines(edges, hough_lines_threshold)
     median_length_lines = get_median_length_linesP(linesP)
 
-    points = get_points(linesP, median_length_lines, img.shape, True)
+    points = get_points(linesP, median_length_lines, img.shape, use_median)
 
     intersections = get_intersections(points)
     intersections_cleaned = clean_intersections(intersections, img.shape)
@@ -383,8 +383,15 @@ def box_detection(img_path):
 
 if __name__ == "__main__":
 
-    img_path = "photos_test/guilhem_board/5.jpg"
-    img, boxes = box_detection(img_path)
+    img_path = "photos_test/chess.com/4.png"
+
+    binary_threshold = 200
+    use_median = False
+    hough_lines_threshold = 150
+
+    img, boxes = box_detection(
+        img_path, binary_threshold, use_median, hough_lines_threshold
+    )
 
     for point in boxes["e4"]:
         cv2.circle(img, (point[0], point[1]), 5, (0, 0, 255), -1)
