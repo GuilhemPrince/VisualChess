@@ -187,7 +187,7 @@ def square_color(square):
 
 
 def squares_to_array(square_list):
-    board = np.zeros([8, 8], dtype = int)
+    board = np.zeros([8, 8], dtype=int)
     for i in range(8):
         for j in range(8):
             board[i, j] = square_color(square_list[j * 8 + (7 - i)])
@@ -228,6 +228,7 @@ def is_final_square(move_square, pos_square):
         return False
     return True
 
+
 #############    Writing the played move    #####################
 def is_capture(final_pos_square):
     return final_pos_square != " "
@@ -250,7 +251,7 @@ def get_move(pos_square, coord, capture, queening):
     if queening:
         queen = "-Q"
     column = chr(coord[1] + 97)
-    line = 8 - coord[0] 
+    line = 8 - coord[0]
     move = piece + capt + str(column) + str(line) + queen
     return move
 
@@ -281,22 +282,23 @@ def new_position(current_position, new_move):
     # If the player is queening, replace the pawn by the queen
     if queening:
         current_position[final_square] = get_queen(current_position[final_square])
-    
+
     return current_position, move
 
-def get_moves(initial_position, move_list): 
+
+def get_moves(initial_position, move_list):
     moves = []
     current_position = initial_position
-    print(current_position,'\n')
+    print(current_position, "\n")
     nb_move = len(move_list)
-    move_convention = ''
-    for i in range(nb_move) :
+    move_convention = ""
+    for i in range(nb_move):
         current_position, move = new_position(current_position, move_list[i])
-        print(current_position, '\n')
-        if i%2 == 0:
-            move_convention = move_convention + str(1 + i//2) + '.' + move
+        print(current_position, "\n")
+        if i % 2 == 0:
+            move_convention = move_convention + str(1 + i // 2) + "." + move
             if i == nb_move - 1:
                 moves.append(move_convention)
-        if i%2 == 1:
-            move_convention = move_convention + ' ' + move + '  '
+        if i % 2 == 1:
+            move_convention = move_convention + " " + move + "  "
     return move_convention
