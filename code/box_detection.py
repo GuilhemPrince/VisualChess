@@ -384,11 +384,18 @@ def box_detection(img_path, binary_threshold, use_median, hough_lines_threshold)
 
 if __name__ == "__main__":
 
-    img_path = "photos_test/chess.com_game/120.jpg"
+    img_path = "photos_test/guilhem_board/1.jpg"
+    # img_path = "photos_test/chess.com_game/110.jpg"
 
-    binary_threshold = 200
-    use_median = False
-    hough_lines_threshold = 150
+    # For guilhem_board
+    binary_threshold = 128
+    use_median = True
+    hough_lines_threshold = 28
+
+    # For chess.com_game
+    # binary_threshold = 200
+    # use_median = False
+    # hough_lines_threshold = 150
 
     img, boxes = box_detection(
         img_path, binary_threshold, use_median, hough_lines_threshold
@@ -400,7 +407,7 @@ if __name__ == "__main__":
     for point in boxes["h3"]:
         cv2.circle(img, (point[0], point[1]), 5, (0, 0, 255), -1)
 
-    for point in boxes["b6"]:
+    for point in boxes["b5"]:
         cv2.circle(img, (point[0], point[1]), 5, (0, 0, 255), -1)
 
     for point in boxes["f1"]:
@@ -411,21 +418,3 @@ if __name__ == "__main__":
     plt.subplot(1, 1, 1), plt.imshow(img)
     plt.title("Highlighted Boxes"), plt.xticks([]), plt.yticks([])
     plt.show()
-
-    images_folder_path = "./photos_test/chess.com_game/"
-    path_image_list = sorted(
-        os.listdir(images_folder_path), key=lambda x: int(x.split(".")[0])
-    )
-    move_nb = len(path_image_list)
-
-    list_boxes = []
-
-    for i in range(len(path_image_list)):
-        print(i)
-        img_path = images_folder_path + path_image_list[i]
-        boxes = box_detection(
-            img_path, binary_threshold, use_median, hough_lines_threshold
-        )[-1]
-        list_boxes.append(boxes)
-        if len(boxes) != 64:
-            print("erreur :", i)
