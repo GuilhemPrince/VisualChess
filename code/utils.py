@@ -3,8 +3,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import cv2
 
-print(os.getcwd())
-
 ############        General            ############
 
 
@@ -175,22 +173,26 @@ def get_all_squares(boxes, board):
     return square_list
 
 
-def square_color(square):
+def square_color(square, threshold_piece_in_square, threshold_piece_color):
     """
     return 0 if the square is empty
     return 1 if there is a white piece in the square
     return 2 if the piece is black
     """
-    if is_piece_in_square(square):
-        return 2 - is_piece_white(square)
+    if is_piece_in_square(square, threshold_piece_in_square):
+        return 2 - is_piece_white(square, threshold_piece_color)
     return 0
 
 
-def squares_to_array(square_list):
+def squares_to_array(square_list, threshold_piece_in_square, threshold_piece_color):
     board = np.zeros([8, 8], dtype=int)
     for i in range(8):
         for j in range(8):
-            board[i, j] = square_color(square_list[j * 8 + (7 - i)])
+            board[i, j] = square_color(
+                square_list[j * 8 + (7 - i)],
+                threshold_piece_in_square,
+                threshold_piece_color,
+            )
     return board
 
 
