@@ -146,7 +146,7 @@ def get_central_part_of_square(img):
     return img[int(X / 4) : int(3 * X / 4), int(Y / 4) : int(3 * Y / 4)]
 
 
-def is_piece_white(img, treshold=150):
+def is_piece_white(img, treshold=160):
     central_img = get_central_part_of_square(img)
     whiteness = np.mean(central_img)
     return whiteness > treshold
@@ -240,19 +240,22 @@ def get_queen(final_pos_square):
     return "Q"
 
 
-def get_move(pos_square, coord, capture, queening):
+def get_move(pos_square, coord, capture, queening, col_pawn_taking_from=None):
     piece = ""
     capt = ""
     queen = ""
+    pawn_col = ""
     if pos_square.lower() != "p":
         piece = pos_square.upper()
     if capture:
         capt = "x"
     if queening:
         queen = "-Q"
+    if col_pawn_taking_from is not None:
+        pawn_col = "abcdefgh"[col_pawn_taking_from] if pos_square.lower() == "p" else ""
     column = chr(coord[1] + 97)
     line = 8 - coord[0]
-    move = piece + capt + str(column) + str(line) + queen
+    move = piece + pawn_col + capt + str(column) + str(line) + queen
     return move
 
 
@@ -275,9 +278,21 @@ def new_position(current_position, new_move):
     queening = current_position[final_square].lower() == "p" and (
         final_square[0] == 0 or final_square[0] == 7
     )
+    # If a pawn takes something, from which column ?
+    col_pawn_taking_from = (
+        original_square[1]
+        if current_position[final_square].lower() == "p" and capture
+        else None
+    )
 
     # Print the Move
-    move = get_move(current_position[final_square], final_square, capture, queening)
+    move = get_move(
+        current_position[final_square],
+        final_square,
+        capture,
+        queening,
+        col_pawn_taking_from,
+    )
 
     # If the player is queening, replace the pawn by the queen
     if queening:
@@ -289,16 +304,14 @@ def new_position(current_position, new_move):
 def get_moves(initial_position, move_list):
     moves = []
     current_position = initial_position
-    print(current_position, "\n")
     nb_move = len(move_list)
     move_convention = ""
     for i in range(nb_move):
         current_position, move = new_position(current_position, move_list[i])
-        print(current_position, "\n")
         if i % 2 == 0:
-            move_convention = move_convention + str(1 + i // 2) + "." + move
+            move_convention = move_convention + str(1 + i // 2) + ". " + move
             if i == nb_move - 1:
                 moves.append(move_convention)
         if i % 2 == 1:
-            move_convention = move_convention + " " + move + "  "
+            move_convention = move_convention + " " + move + " "
     return move_convention
